@@ -79,7 +79,7 @@ public class JrtFinder {
 
     @Override
     protected Stream<String> entryNames() throws IOException {
-      try (final var dir = Files.walk(this.module)) {
+      try (final Stream<Path> dir = Files.walk(this.module)) {
         return dir.map(it -> this.module.relativize(it).toString()).collect(Collectors.toList()).stream();
       }
     }
@@ -114,8 +114,8 @@ public class JrtFinder {
       for (final Path module : modules) {
         ModuleDescriptor descriptor;
         try (final InputStream is = Files.newInputStream(module.resolve("module-info.class"))) {
-          var clazz = StructClass.create(new DataInputFullStream(is.readAllBytes()), false);
-          var moduleAttr = clazz.getAttribute(StructGeneralAttribute.ATTRIBUTE_MODULE);
+          StructClass clazz = StructClass.create(new DataInputFullStream(JInputStream.readAllBytes(is)), false);
+          StructModuleAttribute moduleAttr = clazz.getAttribute(StructGeneralAttribute.ATTRIBUTE_MODULE);
           if (moduleAttr == null) continue;
 
           descriptor = moduleAttr.asDescriptor();

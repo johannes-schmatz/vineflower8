@@ -45,16 +45,16 @@ public class StructModuleAttribute extends StructGeneralAttribute {
   }
 
   public ModuleDescriptor asDescriptor() {
-    var mods = EnumSet.noneOf(ModuleDescriptor.Modifier.class);
+    EnumSet<ModuleDescriptor.Modifier> mods = EnumSet.noneOf(ModuleDescriptor.Modifier.class);
     if ((this.moduleFlags & CodeConstants.ACC_OPEN) != 0) mods.add(ModuleDescriptor.Modifier.OPEN);
     if ((this.moduleFlags & CodeConstants.ACC_SYNTHETIC) != 0) mods.add(ModuleDescriptor.Modifier.SYNTHETIC);
     if ((this.moduleFlags & CodeConstants.ACC_MANDATED) != 0) mods.add(ModuleDescriptor.Modifier.MANDATED);
 
-    var builder = ModuleDescriptor.newModule(this.moduleName, mods);
+    ModuleDescriptor.Builder builder = ModuleDescriptor.newModule(this.moduleName, mods);
     if (moduleVersion != null) builder.version(moduleVersion);
 
-    for (final var requires : this.requires) {
-      var rMods = EnumSet.noneOf(ModuleDescriptor.Requires.Modifier.class);
+    for (final StructModuleAttribute.RequiresEntry requires : this.requires) {
+      EnumSet<ModuleDescriptor.Requires.Modifier> rMods = EnumSet.noneOf(ModuleDescriptor.Requires.Modifier.class);
       if ((requires.flags & CodeConstants.ACC_TRANSITIVE) != 0) rMods.add(ModuleDescriptor.Requires.Modifier.TRANSITIVE);
       if ((requires.flags & CodeConstants.ACC_STATIC_PHASE) != 0) rMods.add(ModuleDescriptor.Requires.Modifier.STATIC);
       if ((requires.flags & CodeConstants.ACC_SYNTHETIC) != 0) rMods.add(ModuleDescriptor.Requires.Modifier.SYNTHETIC);
@@ -66,8 +66,8 @@ public class StructModuleAttribute extends StructGeneralAttribute {
       }
     }
 
-    for (final var exports : this.exports) {
-      var eMods = EnumSet.noneOf(ModuleDescriptor.Exports.Modifier.class);
+    for (final StructModuleAttribute.ExportsEntry exports : this.exports) {
+      EnumSet<ModuleDescriptor.Exports.Modifier> eMods = EnumSet.noneOf(ModuleDescriptor.Exports.Modifier.class);
       if ((exports.flags & CodeConstants.ACC_SYNTHETIC) != 0) eMods.add(ModuleDescriptor.Exports.Modifier.SYNTHETIC);
       if ((exports.flags & CodeConstants.ACC_MANDATED) != 0) eMods.add(ModuleDescriptor.Exports.Modifier.MANDATED);
       if (exports.exportToModules.isEmpty()) {
@@ -77,8 +77,8 @@ public class StructModuleAttribute extends StructGeneralAttribute {
       }
     }
 
-    for (final var opens : this.opens) {
-      var oMods = EnumSet.noneOf(ModuleDescriptor.Opens.Modifier.class);
+    for (final StructModuleAttribute.OpensEntry opens : this.opens) {
+      EnumSet<ModuleDescriptor.Opens.Modifier> oMods = EnumSet.noneOf(ModuleDescriptor.Opens.Modifier.class);
       if ((opens.flags & CodeConstants.ACC_SYNTHETIC) != 0) oMods.add(ModuleDescriptor.Opens.Modifier.SYNTHETIC);
       if ((opens.flags & CodeConstants.ACC_MANDATED) != 0) oMods.add(ModuleDescriptor.Opens.Modifier.MANDATED);
 
@@ -89,11 +89,11 @@ public class StructModuleAttribute extends StructGeneralAttribute {
       }
     }
 
-    for (final var uses : this.uses) {
+    for (final String uses : this.uses) {
       builder.uses(uses.replace('/', '.'));
     }
 
-    for (final var provides : this.provides) {
+    for (final StructModuleAttribute.ProvidesEntry provides : this.provides) {
       builder.provides(
         provides.interfaceName.replace('/', '.'),
         provides.implementationNames.stream().map(name -> name.replace('/', '.')).collect(JCollectors.toUnmodifiableList())
