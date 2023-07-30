@@ -6,16 +6,24 @@ import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.StructContext;
 import org.jetbrains.java.decompiler.struct.attr.StructGeneralAttribute;
+import org.jetbrains.java.decompiler.struct.attr.StructModuleAttribute;
+import org.jetbrains.java.decompiler.util.future.JInputStream;
+import org.jetbrains.java.decompiler.util.future.JList;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.jetbrains.java.decompiler.util.future.JMap;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.lang.module.ModuleDescriptor;
 import java.net.URI;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,25 +32,89 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class JrtFinder {
+  private static final boolean jrtProviderExists = doesJrtProviderExist();
+  private static boolean doesJrtProviderExist() {
+    try {
+      URI url = URI.create("jrt:/");
+      FileSystem fs = FileSystems.newFileSystem(url, JMap.of());
+      fs.close();
+      return true;
+    } catch (Throwable t) {
+      return false;
+    }
+  }
+
     public static final String CURRENT = "current";
 
     // https://openjdk.java.net/jeps/220 for runtime image structure and JRT filesystem
 
   public static void addRuntime(final StructContext ctx) {
     try {
-      ctx.addSpace(new JavaRuntimeContextSource(null), false);
+      if (jrtProviderExists) {
+
+        final URI url = URI.create("jrt:/");
+        FileSystem fs = FileSystems.newFileSystem(url, JMap.of());
+        ctx.addSpace(new JavaRuntimeContextSource("current", fs), false);
+      } else {
+        File javaHome = new File(System.getProperty("java.home"));
+        // legacy runtime, add all jars from the lib and jre/lib folders
+        final List<File> jrt = new ArrayList<>();
+        Collections.addAll(jrt, new File(javaHome, "jre/lib").listFiles());
+        Collections.addAll(jrt, new File(javaHome, "lib").listFiles());
+        for (final File lib : jrt) {
+          if (lib.isFile() && lib.getName().endsWith(".jar")) {
+            ctx.addSpace(lib, false);
+          }
+        }
+      }
     } catch (final IOException ex) {
       DecompilerContext.getLogger().writeMessage("Failed to open current java runtime for inspection", ex);
     }
   }
 
   public static void addRuntime(final StructContext ctx, final File javaHome) {
-    if (new File(javaHome, "lib/jrt-fs.jar").isFile()) {
+    File jrtFsJar = new File(javaHome, "lib/jrt-fs.jar");
+    if (jrtFsJar.isFile()) {
       // Java 9+
-      try {
-        ctx.addSpace(new JavaRuntimeContextSource(javaHome), false);
-      } catch (final IOException ex) {
-        DecompilerContext.getLogger().writeMessage("Failed to open java runtime at " + javaHome, ex);
+      if (jrtProviderExists) {
+        try {
+          final URI url = URI.create("jrt:/");
+          if (javaHome == null) {
+            FileSystem fs = FileSystems.newFileSystem(url, JMap.of());
+            ctx.addSpace(new JavaRuntimeContextSource("current", fs), false);
+          } else {
+            FileSystem fs = FileSystems.newFileSystem(url, JMap.of("java.home", javaHome.getAbsolutePath()));
+            ctx.addSpace(new JavaRuntimeContextSource(javaHome.getAbsolutePath(), fs), false);
+          }
+        } catch (final IOException ex) {
+          DecompilerContext.getLogger().writeMessage("Failed to open java runtime at " + javaHome, ex);
+        }
+      } else {
+        final URI url = URI.create("jrt:/");
+        final Map<String, ?> env = JMap.of("java.home", javaHome.getAbsolutePath());
+        Object fileSystem = null;
+        try {
+          // load the lib/jrt-fs.jar, jdk.internal.jrtfs.JrtFileSystemProvider
+
+          // SECURITY: In theory this _could_ be used to get US to execute code from an attacker
+          URLClassLoader classLoader = new URLClassLoader(new URL[]{jrtFsJar.toURI().toURL()});
+          Class<?> clazz = classLoader.loadClass("jdk.internal.jrtfs.JrtFileSystemProvider");
+          Object fileSystemProvider = clazz.getConstructor().newInstance();
+          Method newFileSystem = clazz.getDeclaredMethod("newFileSystem", URI.class, Map.class);
+
+          fileSystem = newFileSystem.invoke(fileSystemProvider, url, env);
+        } catch (final MalformedURLException | NoSuchMethodException | InstantiationException | InvocationTargetException | ClassNotFoundException |
+          IllegalAccessException ex) {
+
+          DecompilerContext.getLogger().writeMessage("Cannot load the newer runtime using the jrt-fs.jar from disk", ex);
+        }
+
+        if (fileSystem instanceof FileSystem) {
+          FileSystem fs = (FileSystem) fileSystem;
+          ctx.addSpace(new JavaRuntimeContextSource(javaHome.getAbsolutePath(), fs), false);
+        } else {
+          DecompilerContext.getLogger().writeMessage("Cannot cast to FileSystem", IFernflowerLogger.Severity.ERROR);
+        }
       }
       return;
     } else if (javaHome.exists()) {
@@ -89,15 +161,9 @@ public class JrtFinder {
     private final String identifier;
     private final FileSystem jrtFileSystem;
 
-    public JavaRuntimeContextSource(final File javaHome) throws IOException {
-      final var url = URI.create("jrt:/");
-      if (javaHome == null) {
-        this.identifier = "current";
-        this.jrtFileSystem = FileSystems.newFileSystem(url, Map.of());
-      } else {
-        this.identifier = javaHome.getAbsolutePath();
-        this.jrtFileSystem = FileSystems.newFileSystem(url, Map.of("java.home", javaHome.getAbsolutePath()));
-      }
+    public JavaRuntimeContextSource(final String identifier, final FileSystem jrtFileSystem) {
+      this.identifier = identifier;
+      this.jrtFileSystem = jrtFileSystem;
     }
 
     @Override
