@@ -1,6 +1,9 @@
 // Copyright 2000-2022 JetBrains s.r.o. and ForgeFlower contributors Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package org.jetbrains.java.decompiler.main.extern;
 
+import org.jetbrains.java.decompiler.util.future.JInputStream;
+import org.jetbrains.java.decompiler.util.future.JList;
+
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
@@ -40,12 +43,13 @@ public interface IContextSource {
    * @throws IOException if an error is encountered while reading the class data
    */
   default byte[] getClassBytes(final String className) throws IOException {
-    final InputStream is = this.getInputStream(className + CLASS_SUFFIX);
-    if (is == null)
-      return null;
+    try (
+      final InputStream is = this.getInputStream(className + CLASS_SUFFIX)
+    ) {
+      if (is == null)
+        return null;
 
-    try (is) {
-      return is.readAllBytes();
+      return JInputStream.readAllBytes(is);
     }
   }
 
@@ -131,7 +135,7 @@ public interface IContextSource {
    * @param childContexts contexts discovered within this context
    */
   public static final class Entries {
-    public static final Entries EMPTY = new Entries(List.of(), List.of(), List.of(), List.of());
+    public static final Entries EMPTY = new Entries(JList.of(), JList.of(), JList.of(), JList.of());
 
     private final List<Entry> classes;
     private final List<String> directories;
@@ -139,15 +143,15 @@ public interface IContextSource {
     private final List<IContextSource> childContexts;
 
     public Entries(List<Entry> classes, List<String> directories, List<Entry> others) {
-      this(classes, directories, others, List.of());
+      this(classes, directories, others, JList.of());
     }
 
     public Entries(List<Entry> classes, List<String> directories, List<Entry> others, List<IContextSource> childContexts) {
       // defensive copy
-      this.classes = List.copyOf(classes);
-      this.directories = List.copyOf(directories);
-      this.others = List.copyOf(others);
-      this.childContexts = List.copyOf(childContexts);
+      this.classes = JList.copyOf(classes);
+      this.directories = JList.copyOf(directories);
+      this.others = JList.copyOf(others);
+      this.childContexts = JList.copyOf(childContexts);
     }
 
     public List<Entry> classes() {

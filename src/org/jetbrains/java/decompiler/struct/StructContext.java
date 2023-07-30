@@ -9,6 +9,9 @@ import org.jetbrains.java.decompiler.main.extern.IResultSaver;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericMain;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericMethodDescriptor;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
+import org.jetbrains.java.decompiler.util.future.JCollectors;
+import org.jetbrains.java.decompiler.util.future.JInputStream;
+import org.jetbrains.java.decompiler.util.future.JList;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +33,7 @@ public class StructContext {
       synchronized (StructContext.class) {
         if (SENTINEL_CLASS == null) {
           try (final InputStream stream = StructContext.class.getResourceAsStream("StructContext.class")) {
-            byte[] data = stream.readAllBytes();
+            byte[] data = JInputStream.readAllBytes(stream);
             SENTINEL_CLASS = StructClass.create(new DataInputFullStream(data), false);
           } catch (final IOException ex) {
             throw new UncheckedIOException(ex);
@@ -98,7 +101,7 @@ public class StructContext {
       .filter(ContextUnit::isOwn)
       .flatMap(unit -> unit.getClassNames().stream())
       .map(name -> Objects.requireNonNull(this.getClass(name), () -> "Could not find class " + name))
-      .collect(Collectors.toUnmodifiableList());
+      .collect(JCollectors.toUnmodifiableList());
   }
 
   public void reloadContext() throws IOException {
@@ -106,7 +109,7 @@ public class StructContext {
     this.unitsByClassName.clear();
     this.abstractNames.clear();
 
-    final List<ContextUnit> units = List.copyOf(this.units);
+    final List<ContextUnit> units = JList.copyOf(this.units);
     this.units.clear();
     for (ContextUnit unit : units) {
       if (unit.isRoot()) {

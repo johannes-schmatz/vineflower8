@@ -125,7 +125,7 @@ public class JrtFinder {
         children.add(new JavaRuntimeModuleContextSource(descriptor, module));
       }
 
-        return new Entries(List.of(), List.of(), List.of(), children);
+        return new Entries(JList.of(), JList.of(), JList.of(), children);
       } catch (final IOException ex) {
         DecompilerContext.getLogger().writeMessage("Failed to read modules from runtime " + this.identifier, ex);
         return Entries.EMPTY;

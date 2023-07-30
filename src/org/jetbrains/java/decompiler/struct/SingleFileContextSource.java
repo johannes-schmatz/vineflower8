@@ -6,6 +6,7 @@ import org.jetbrains.java.decompiler.main.extern.IContextSource;
 import org.jetbrains.java.decompiler.main.extern.IResultSaver;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
+import org.jetbrains.java.decompiler.util.future.JList;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -50,9 +51,9 @@ class SingleFileContextSource implements IContextSource {
     if (this.contents == null) {
       return Entries.EMPTY;
     } else if (this.file.getName().endsWith(CLASS_SUFFIX)) {
-      return new Entries(List.of(Entry.atBase(this.qualifiedName)), List.of(), List.of());
+      return new Entries(JList.of(Entry.atBase(this.qualifiedName)), JList.of(), JList.of());
     } else {
-      return new Entries(List.of(), List.of(), List.of(Entry.atBase(this.file.getName())));
+      return new Entries(JList.of(), JList.of(), JList.of(Entry.atBase(this.file.getName())));
     }
   }
 

@@ -1,6 +1,8 @@
 // Copyright 2000-2020 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package org.jetbrains.java.decompiler.util;
 
+import org.jetbrains.java.decompiler.util.future.JInputStream;
+
 import java.io.*;
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,7 +24,7 @@ public final class InterpreterUtil {
   }
 
   public static void copyStream(InputStream in, OutputStream out) throws IOException {
-    in.transferTo(out);
+    JInputStream.transferTo(in, out);
   }
 
   public static byte[] getBytes(ZipFile archive, ZipEntry entry) throws IOException {
@@ -38,7 +40,7 @@ public final class InterpreterUtil {
   }
 
   public static byte[] readBytes(InputStream stream, int length) throws IOException {
-    byte[] bytes = stream.readNBytes(length);
+    byte[] bytes = JInputStream.readNBytes(stream, length);
 
     if (bytes.length < length) {
       throw new IOException("premature end of stream");

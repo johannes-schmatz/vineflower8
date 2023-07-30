@@ -2,6 +2,8 @@ package org.jetbrains.java.decompiler.collections;
 
 import org.jetbrains.java.decompiler.util.FastFixedSetFactory;
 import org.jetbrains.java.decompiler.util.FastFixedSetFactory.FastFixedSet;
+import org.jetbrains.java.decompiler.util.future.JList;
+import org.jetbrains.java.decompiler.util.future.JString;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -831,17 +833,17 @@ public class FixedFastSetTest {
 
   private static Stream<Arguments> nonEmptyFactories() {
     return Stream.of(
-      List.of(0),
-      List.of(1, 2, 3),
-      List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-      List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
-      List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20),
-      List.of(0x0000_0000, 0x0000_1000, 0x0000_2000, 0x0000_4000, 0x0000_8000,
+      JList.of(0),
+      JList.of(1, 2, 3),
+      JList.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+      JList.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
+      JList.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20),
+      JList.of(0x0000_0000, 0x0000_1000, 0x0000_2000, 0x0000_4000, 0x0000_8000,
         0x0001_0000, 0x0010_0000, 0x0100_0000,
         0x1000_0000, 0x2000_0000, 0x4000_0000, 0x8000_0000,
         0xF000_0000, 0xFFFF_0000, 0xFFFF_0001, 0xFFFF_FFFF),
       IntStream.range(0, 1024).boxed().collect(Collectors.toList()),
-      IntStream.range(0, 1024).mapToObj("A"::repeat).collect(Collectors.toList())
+      IntStream.range(0, 1024).mapToObj(k -> JString.repeat("A", k)).collect(Collectors.toList())
     ).map(list -> Arguments.of(list, new FastFixedSetFactory<>(list)));
   }
 }

@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import org.jetbrains.java.decompiler.util.future.JSet;
+import org.jetbrains.java.decompiler.util.future.JCollectors;
 
 public class StructModuleAttribute extends StructGeneralAttribute {
   public String moduleName;
@@ -73,7 +73,7 @@ public class StructModuleAttribute extends StructGeneralAttribute {
       if (exports.exportToModules.isEmpty()) {
         builder.exports(eMods, exports.packageName.replace('/', '.'));
       } else {
-        builder.exports(eMods, exports.packageName.replace('/', '.'), Set.copyOf(exports.exportToModules));
+        builder.exports(eMods, exports.packageName.replace('/', '.'), JSet.copyOf(exports.exportToModules));
       }
     }
 
@@ -85,7 +85,7 @@ public class StructModuleAttribute extends StructGeneralAttribute {
       if (opens.opensToModules.isEmpty()) {
         builder.opens(oMods, opens.packageName.replace('/', '.'));
       } else {
-        builder.opens(oMods, opens.packageName.replace('/', '.'), Set.copyOf(opens.opensToModules));
+        builder.opens(oMods, opens.packageName.replace('/', '.'), JSet.copyOf(opens.opensToModules));
       }
     }
 
@@ -96,7 +96,7 @@ public class StructModuleAttribute extends StructGeneralAttribute {
     for (final var provides : this.provides) {
       builder.provides(
         provides.interfaceName.replace('/', '.'),
-        provides.implementationNames.stream().map(name -> name.replace('/', '.')).collect(Collectors.toUnmodifiableList())
+        provides.implementationNames.stream().map(name -> name.replace('/', '.')).collect(JCollectors.toUnmodifiableList())
       );
     }
 
