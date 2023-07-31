@@ -40,11 +40,12 @@ public class ClasspathScanner {
 
     private static void addAllModulePath(StructContext ctx) {
       for (ModuleReference module : ModuleFinder.ofSystem().findAll()) {
-        String name = module.descriptor().name();
+        String nameAndVersion = module.descriptor().toNameAndVersion();
         try {
-          ctx.addSpace(new ModuleContextSource(module), false);
+          ModuleReader reader = module.open();
+          ctx.addSpace(new ModuleContextSource(reader, nameAndVersion), false);
         } catch (IOException e) {
-          DecompilerContext.getLogger().writeMessage("Error loading module " + name, e);
+          DecompilerContext.getLogger().writeMessage("Error loading module " + nameAndVersion, e);
         }
       }
     }
@@ -52,9 +53,9 @@ public class ClasspathScanner {
     static class ModuleContextSource extends ModuleBasedContextSource implements AutoCloseable {
       private final ModuleReader reader;
 
-      public ModuleContextSource(final ModuleReference ref) throws IOException {
-        super(ref.descriptor());
-        this.reader = ref.open();
+      public ModuleContextSource(final ModuleReader reader, final String nameAndVersion) throws IOException {
+        super(nameAndVersion);
+        this.reader = reader;
       }
 
       @Override

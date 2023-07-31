@@ -6,21 +6,20 @@ import org.jetbrains.java.decompiler.main.extern.IContextSource;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 
 import java.io.IOException;
-import java.lang.module.ModuleDescriptor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
 abstract class ModuleBasedContextSource implements IContextSource {
-  private final ModuleDescriptor ref;
+  private final String nameAndVersion;
 
-  public ModuleBasedContextSource(final ModuleDescriptor ref) {
-    this.ref = ref;
+  public ModuleBasedContextSource(final String nameAndVersion) {
+    this.nameAndVersion = nameAndVersion;
   }
 
   @Override
   public String getName() {
-    return "module " + this.ref.toNameAndVersion();
+    return "module " + nameAndVersion;
   }
 
   protected abstract Stream<String> entryNames() throws IOException;

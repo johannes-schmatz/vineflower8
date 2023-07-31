@@ -103,6 +103,14 @@ public class StructModuleAttribute extends StructGeneralAttribute {
     return builder.build();
   }
 
+  public String toNameAndVersion() {
+    if (moduleVersion != null) {
+      return moduleName + "@" + moduleVersion;
+    } else {
+      return moduleName;
+    }
+  }
+
   public List<RequiresEntry> readRequires(DataInputFullStream data, ConstantPool pool) throws IOException {
     int requiresCount = data.readUnsignedShort();
     if (requiresCount <= 0) return Collections.emptyList();

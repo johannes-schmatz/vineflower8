@@ -19,7 +19,6 @@ import org.jetbrains.java.decompiler.util.future.JMap;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
-import java.lang.module.ModuleDescriptor;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -139,8 +138,8 @@ public class JrtFinder {
   static final class JavaRuntimeModuleContextSource extends ModuleBasedContextSource {
     private Path module;
 
-    JavaRuntimeModuleContextSource(final ModuleDescriptor descriptor, final Path moduleRoot) {
-      super(descriptor);
+    JavaRuntimeModuleContextSource(final String nameAndVersion, final Path moduleRoot) {
+      super(nameAndVersion);
       this.module = moduleRoot;
     }
 
@@ -178,17 +177,17 @@ public class JrtFinder {
       try {
       final List<Path> modules = Files.list(this.jrtFileSystem.getPath("modules")).collect(Collectors.toList());
       for (final Path module : modules) {
-        ModuleDescriptor descriptor;
+        String nameAndVersion;
         try (final InputStream is = Files.newInputStream(module.resolve("module-info.class"))) {
           StructClass clazz = StructClass.create(new DataInputFullStream(JInputStream.readAllBytes(is)), false);
           StructModuleAttribute moduleAttr = clazz.getAttribute(StructGeneralAttribute.ATTRIBUTE_MODULE);
           if (moduleAttr == null) continue;
 
-          descriptor = moduleAttr.asDescriptor();
+          nameAndVersion = moduleAttr.toNameAndVersion();
         } catch (final IOException ex) {
           continue;
         }
-        children.add(new JavaRuntimeModuleContextSource(descriptor, module));
+        children.add(new JavaRuntimeModuleContextSource(nameAndVersion, module));
       }
 
         return new Entries(JList.of(), JList.of(), JList.of(), children);
