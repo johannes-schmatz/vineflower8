@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-abstract class ModuleBasedContextSource implements IContextSource {
+public abstract class ModuleBasedContextSource implements IContextSource {
   private final String nameAndVersion;
 
   public ModuleBasedContextSource(final String nameAndVersion) {

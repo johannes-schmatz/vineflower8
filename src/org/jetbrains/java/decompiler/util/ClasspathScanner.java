@@ -1,13 +1,11 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 package org.jetbrains.java.decompiler.util;
 
-import java.lang.module.*;
+import org.jetbrains.java.decompiler.util.future.JModuleContextSource;
+
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
@@ -35,43 +33,7 @@ public class ClasspathScanner {
         }
       }
 
-      addAllModulePath(ctx);
+      // On java 8 and below, the above already contains the currently running java.
+      JModuleContextSource.addAllModulePathIfExists(ctx);
     }
-
-    private static void addAllModulePath(StructContext ctx) {
-      for (ModuleReference module : ModuleFinder.ofSystem().findAll()) {
-        String nameAndVersion = module.descriptor().toNameAndVersion();
-        try {
-          ModuleReader reader = module.open();
-          ctx.addSpace(new ModuleContextSource(reader, nameAndVersion), false);
-        } catch (IOException e) {
-          DecompilerContext.getLogger().writeMessage("Error loading module " + nameAndVersion, e);
-        }
-      }
-    }
-
-    static class ModuleContextSource extends ModuleBasedContextSource implements AutoCloseable {
-      private final ModuleReader reader;
-
-      public ModuleContextSource(final ModuleReader reader, final String nameAndVersion) throws IOException {
-        super(nameAndVersion);
-        this.reader = reader;
-      }
-
-      @Override
-      public Stream<String> entryNames() throws IOException {
-        return this.reader.list();
-      }
-
-      @Override
-      public InputStream getInputStream(String resource) throws IOException {
-        return this.reader.open(resource).orElse(null);
-      }
-
-      @Override
-      public void close() throws Exception {
-        this.reader.close();
-      }
-    }
-
 }
