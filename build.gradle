@@ -15,15 +15,17 @@ apply plugin: 'scala'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
+def javaVersion = 8;
+
 compileJava {
-  sourceCompatibility '11'
-  targetCompatibility '11'
+  sourceCompatibility Integer.toString(javaVersion)
+  targetCompatibility Integer.toString(javaVersion)
 }
 
 group = 'org.vineflower'
 archivesBaseName = 'vineflower'
 
-version = '1.9.1'
+version = '1.9.1+java8'
 
 def ENV = System.getenv()
 version = version + (ENV.GITHUB_ACTIONS ? "" : "+local")
@@ -64,7 +66,7 @@ jacocoTestReport {
 }
 
 java.toolchain {
-  languageVersion = JavaLanguageVersion.of(11)
+  languageVersion = JavaLanguageVersion.of(javaVersion)
 }
 
 tasks.withType(JavaCompile) {

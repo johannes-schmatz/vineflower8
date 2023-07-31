@@ -50,9 +50,9 @@ public class JModuleContextSource {
   private static final MethodHandle moduleReference_descriptor = getHandle("java.lang.module.ModuleReference", "descriptor", "()Ljava/lang/module/ModuleDescriptor;");
   private static final MethodHandle moduleReference_open = getHandle("java.lang.module.ModuleReference", "open", "()Ljava/lang/module/ModuleReader;");
   private static final MethodHandle moduleDescriptor_toNameAndVersion = getHandle("java.lang.module.ModuleDescriptor", "toNameAndVersion", "()Ljava/lang/String;");
-  private static final MethodHandle moduleReader_list = getHandle("java.lang.module.ModuleDescriptor", "list", "()Ljava/util/stream/Stream;");
-  private static final MethodHandle moduleReader_open = getHandle("java.lang.module.ModuleDescriptor", "open", "(Ljava/lang/String;)Ljava/util/Optional;");
-  private static final MethodHandle moduleReader_close = getHandle("java.lang.module.ModuleDescriptor", "close", "()V");
+  private static final MethodHandle moduleReader_list = getHandle("java.lang.module.ModuleReader", "list", "()Ljava/util/stream/Stream;");
+  private static final MethodHandle moduleReader_open = getHandle("java.lang.module.ModuleReader", "open", "(Ljava/lang/String;)Ljava/util/Optional;");
+  private static final MethodHandle moduleReader_close = getHandle("java.lang.module.ModuleReader", "close", "()V");
 
   // In Java 9+: java.lang.module.ModuleFinder.ofSystem().findAll().forEach(action)
   private static void ModuleFinder_ofSystem_findAll_forEach(Consumer<Object> action) {
